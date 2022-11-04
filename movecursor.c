@@ -18,44 +18,7 @@ int root_x, root_y;
 int win_x, win_y;
 int click;
 
-void mouseClick(int button) {
-	dpy = XOpenDisplay(NULL);
-	
-	if (dpy == NULL) {
-		fprintf(stderr, "Error: Could not open display...\n");
-		exit(EXIT_FAILURE);
-	}
-	
-	memset(&event, 0x00, sizeof(event));
-	
-	event.type = ButtonPress;
-	event.xbutton.button = button;
-	event.xbutton.same_screen = True;
-	
-	XQueryPointer(dpy, root_window, &event.xbutton.root, &event.xbutton.window, &event.xbutton.x_root, &event.xbutton.y_root, &event.xbutton.x, &event.xbutton.y, &event.xbutton.state);
-	
-	event.xbutton.subwindow = event.xbutton.window;
-	
-	while (event.xbutton.subwindow) {
-		event.xbutton.window = event.xbutton.subwindow;
-		XQueryPointer(dpy, event.xbutton.window, &event.xbutton.root, &event.xbutton.subwindow, &event.xbutton.x_root, &event.xbutton.y_root, &event.xbutton.x, &event.xbutton.y, &event.xbutton.state);
-	}
-	
-	if(XSendEvent(dpy, PointerWindow, True, 0xfff, &event) == 0) fprintf(stderr, "Error: Could not send XEvent...\n");
-	
-	XFlush(dpy);
-	
-	event.type = ButtonRelease;
-	event.xbutton.state = 0x100;
-	
-	if(XSendEvent(dpy, PointerWindow, True, 0xfff, &event) == 0) fprintf(stderr, "Error: Could not send XEvent...\n");
-	
-	//XFlush(dpy);
-	//XCloseDisplay(dpy);
-}
-
-int main() {
-
+int main(int button) {
   srandom(time(NULL));
 
   dpy = XOpenDisplay(0);
@@ -81,17 +44,39 @@ int main() {
     &win_x,
     &win_y,
     &mask_return
-  ); 
+  );
 
-  while (1){
+  while(1) {
 
     click = ((random() % 10) + 1);
 
     if (click >= 5 && click <= 10) {
-      mouseClick(1);
-    } else if (click < 4 && click >= 1){
-      ;
-    }
+      	memset(&event, 0x00, sizeof(event));
+	
+	  event.type = ButtonPress;
+	  event.xbutton.button = button;
+	  event.xbutton.same_screen = True;
+	
+	  XQueryPointer(dpy, root_window, &event.xbutton.root, &event.xbutton.window, &event.xbutton.x_root, &event.xbutton.y_root, &event.xbutton.x, &event.xbutton.y, &event.xbutton.state);
+	
+	  event.xbutton.subwindow = event.xbutton.window;
+	
+  	while (event.xbutton.subwindow) {
+		  event.xbutton.window = event.xbutton.subwindow;
+	  	XQueryPointer(dpy, event.xbutton.window, &event.xbutton.root, &event.xbutton.subwindow, &event.xbutton.x_root, &event.xbutton.y_root, &event.xbutton.x, &event.xbutton.y, &event.xbutton.state);
+	  }
+	
+	  if(XSendEvent(dpy, PointerWindow, True, 0xfff, &event) == 0) fprintf(stderr, "Error: Could not send XEvent...\n");
+	
+	    XFlush(dpy);
+	
+	    event.type = ButtonRelease;
+	    event.xbutton.state = 0x100;
+	
+	    if(XSendEvent(dpy, PointerWindow, True, 0xfff, &event) == 0) fprintf(stderr, "Error: Could not send XEvent...\n");
+
+	    XFlush(dpy);
+    } 
 
     int shake_x = root_x + (random() % 10);
     int shake_y = root_y + (random() % 10);
@@ -101,4 +86,5 @@ int main() {
     XWarpPointer(dpy, None, root_window, root_x, root_y, 0, 0, shake_x, shake_y); 
     XFlush(dpy); //XFlush updates cursors position
   }
+  XCloseDisplay(dpy);
 }
